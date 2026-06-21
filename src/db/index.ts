@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Create data directory if it doesn't exist
-const dataDir = path.join(process.cwd(), 'data');
+const dataDir = process.env.NODE_ENV === "production" ? "/tmp/data" : path.join(process.cwd(), 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }

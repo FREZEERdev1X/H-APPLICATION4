@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { createServer as createViteServer } from "vite";
+
 import multer from "multer";
 import jwt from "jsonwebtoken";
 import cors from "cors";
@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_H12M_KEY";
 const DEV_PASSWORD = "H12M";
 
 // Ensure upload directory exists
-const uploadDir = path.join(process.cwd(), "uploads");
+const uploadDir = process.env.NODE_ENV === "production" ? "/tmp/uploads" : path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -62,7 +62,7 @@ async function startServer() {
   app.use(express.json());
   
   // Serve static uploads
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  app.use("/uploads", express.static(uploadDir));
 
   // API: Developer Login
   app.post("/api/login", (req, res) => {
@@ -287,6 +287,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -295,7 +296,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*all", (req, res) => {
+    app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

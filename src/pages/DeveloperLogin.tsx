@@ -21,16 +21,22 @@ export default function DeveloperLogin({ lang }: { lang: "en" | "ar" }) {
         body: JSON.stringify({ password })
       });
       
-      const data = await res.json();
-      
-      if (res.ok && data.token) {
-        localStorage.setItem("devToken", data.token);
-        navigate("/developer-dashboard");
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        
+        if (res.ok && data.token) {
+          localStorage.setItem("devToken", data.token);
+          navigate("/developer-dashboard");
+        } else {
+          setError(data.error || (lang === "en" ? "Invalid password" : "كلمة مرور خاطئة"));
+        }
       } else {
-        setError(lang === "en" ? "Invalid password" : "كلمة مرور خاطئة");
+        const text = await res.text();
+        setError(`Server Error (${res.status}): ${text.substring(0, 50)}`);
       }
-    } catch (err) {
-      setError("Login failed");
+    } catch (err: any) {
+      setError("Connection failed: " + err.message);
     } finally {
       setLoading(false);
     }
