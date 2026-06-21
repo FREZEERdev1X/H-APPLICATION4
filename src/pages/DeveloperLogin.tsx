@@ -33,7 +33,15 @@ export default function DeveloperLogin({ lang }: { lang: "en" | "ar" }) {
         }
       } else {
         const text = await res.text();
-        setError(`Server Error (${res.status}): ${text.substring(0, 50)}`);
+        if (text.includes("NOT_FOUND")) {
+          setError(
+            lang === "en" 
+              ? "Error: Backend not found. If deployed on Vercel, please use a Node.js host like Render." 
+              : "خطأ: الخادم غير متوفر. إذا نشرت على Vercel، يرجى استخدام استضافة Node.js مثل Render."
+          );
+        } else {
+          setError(`Server Error (${res.status}): ${text.substring(0, 40)}`);
+        }
       }
     } catch (err: any) {
       setError("Connection failed: " + err.message);
